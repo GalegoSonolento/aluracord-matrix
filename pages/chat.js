@@ -5,17 +5,6 @@ import appConfig from '../config.json';
 export default function ChatPage() {
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
-    
-    
-    //Tentativa frustada de colocar o botão de excluir
-    //function handleRemove(novaMensagem) {
-      //  const mensagemId = novaMensagem.id
-        //const listaDeMensagensFiltrada = listaDeMensagens.filter((mensagemFiltrada) => {
-          //  return mensagemFiltrada.id != mensagemId
-       // }
-        //)
-
-    //}
 
     /*
     // Usuário
@@ -79,7 +68,11 @@ export default function ChatPage() {
                         padding: '16px',
                     }}
                 >
-                    <MessageList mensagens={listaDeMensagens} />
+                    <MessageList
+                        mensagens={listaDeMensagens}
+                        setListaDeMensagens={setListaDeMensagens}
+                        listaDeMensagens={listaDeMensagens}
+                    />
                     {/* {listaDeMensagens.map((mensagemAtual) => {
                         return (
                             <li key={mensagemAtual.id}>
@@ -119,7 +112,7 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals[200],
                             }}
                         />
-                        <Button 
+                        <Button
                             type='button'
                             label='Send'
                             styleSheet={{
@@ -154,6 +147,10 @@ function Header() {
 
 function MessageList(props) {
     console.log(props);
+    const handleRemove = (id) => {
+        const newMessages = props.listaDeMensagens.filter(mensagem => mensagem.id !== id);
+        props.setListaDeMensagens(newMessages)
+    }
     return (
         <Box
             tag="ul"
@@ -183,47 +180,54 @@ function MessageList(props) {
                         <Box
                             styleSheet={{
                                 marginBottom: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
                             }}
                         >
-                            <Image
-                                styleSheet={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '50%',
-                                    display: 'inline-block',
-                                    marginRight: '8px',
-                                }}
-                                src={`https://github.com/GalegoSonolento.png`}
-                            />
-                            <Text tag="strong">
-                                {mensagem.de}
-                            </Text>
-                            <Text
-                                styleSheet={{
-                                    fontSize: '10px',
-                                    marginLeft: '8px',
-                                    color: appConfig.theme.colors.neutrals[300],
-                                }}
-                                tag="span"
-                            >
-                                {(new Date().toLocaleDateString())}
-                            </Text>
+                            <Box>
+                                <Image
+                                    styleSheet={{
+                                        width: '20px',
+                                        height: '20px',
+                                        borderRadius: '50%',
+                                        display: 'inline-block',
+                                        marginRight: '8px',
+                                    }}
+                                    src={`https://github.com/GalegoSonolento.png`}
+                                />
+                                <Text tag="strong">
+                                    {mensagem.de}
+                                </Text>
+                                <Text
+                                    styleSheet={{
+                                        fontSize: '10px',
+                                        marginLeft: '8px',
+                                        color: appConfig.theme.colors.neutrals[300],
+                                    }}
+                                    tag="span"
+                                >
+                                    {(new Date().toLocaleDateString())}
+                                </Text>
+                            </Box>
+
+                            <Box>
+                                <Button
+                                    type='button'
+                                    label='&times;'
+                                    size='sm'
+                                    variant='tertiary'
+                                    colorVariant='light'
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        handleRemove(mensagem.id);
+                                    }}
+                                    styleSheet={{
+                                    }}
+                                />
+                            </Box>
                         </Box>
                         {mensagem.texto}
-                        {/* Tentativa frustada de colocar o botão de excluir 
-                        //<Button 
-                            type='button'
-                           // label='&times;'
-                            size='sm'
-                            variant='tertiary'
-                            colorVariant='light'
-                            //onClick={() => handleRemove(mensagens.id)}
-                            styleSheet={{
-                                position: 'absolute',
-                                top: '4px',
-                                right: '4px'
-                            }}
-                        /> */}
                     </Text>
                 );
             })}
