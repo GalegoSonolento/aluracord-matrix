@@ -1,10 +1,62 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import {useRouter} from 'next/router';
+import { createClient } from '@supabase/supabase-js';
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker.js';
+
+const SUPABASE_ANON_KEY =  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzM5NzAwNywiZXhwIjoxOTU4OTczMDA3fQ.l6RCgGxDfIPozztLPYLtz_lOZMroA5vjoxDNcIBNt8c'
+const SUPABASE_URL = 'https://ahyrhoppaktcpbleuwpq.supabase.co';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function escutaEmRealTime(adicionaMensagem) {
+    return supabaseClient
+    .from('Mensagens')
+    .on('INSERT', (respostaLive) => {
+        adicionaMensagem(respostaLive.new);
+    })
+    .subscribe();
+}
 
 export default function ChatPage() {
+    const roteamento = useRouter();
+    const usuarioLogado = roteamento.query.username;
+        console.log('roteamento.query', roteamento.query)
     const [mensagem, setMensagem] = React.useState('');
-    const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
+    const [listaDeMensagens, setListaDeMensagens] = React.useState([
+        // {
+        //     id: 1,
+        //     de: 'omariosouto',
+        //     texto: ':sticker: https://c.tenor.com/TKpmh4WFEsAAAAAC/alura-gaveta-filmes.gif'
+        // },
+        // {
+        //     id: 2,
+        //     de: 'GalegoSonolento',
+        //     texto: 'o ternário é meio triste'  
+        // }
+    ]);
+
+    React.useEffect(() => {
+        supabaseClient
+        .from('Mensagens') 
+        .select('*')
+        .order('id', {ascending: false })
+        .then(({ data }) => {
+            // console.log('dados da consulta', data);
+            setListaDeMensagens(data)
+        }); 
+        
+        escutaEmRealTime((novaMensagem) => {
+            console.log('nova Mensagem', novaMensagem);
+            setListaDeMensagens((valorAtualDaLista) => {
+                return [
+                    novaMensagem,
+                    ...valorAtualDaLista,
+                ]
+            });
+        });
+    }, []);
+    
 
     /*
     // Usuário
@@ -19,15 +71,21 @@ export default function ChatPage() {
     */
     function handleNovaMensagem(novaMensagem) {
         const mensagem = {
-            id: listaDeMensagens.length + 1,
-            de: 'GalegoSonolento',
+            // id: listaDeMensagens.length + 1,
+            de: usuarioLogado,
             texto: novaMensagem,
         };
 
-        setListaDeMensagens([
-            mensagem,
-            ...listaDeMensagens,
-        ]);
+        supabaseClient
+            .from('Mensagens')
+            .insert([
+                // Tem q ser um objeto com os MESMOS CAMPOS que foram escritos no supabase
+                mensagem
+            ])
+            .then(({ data }) => {
+                console.log('Criando mensagem: ', data);
+            })
+
         setMensagem('');
     }
 
@@ -120,6 +178,14 @@ export default function ChatPage() {
                             }}
                             onClick={() => handleNovaMensagem(mensagem)}
                         />
+                        {/* Interceptação -> explica onde tá configurado cada mensagem */}
+                        {/* Callback  */}
+                        <ButtonSendSticker 
+                            onStickerClick={(sticker) => {
+                                console.log('[USANDO O COMPONENTE] Salva esse sticker no banco', sticker);
+                                handleNovaMensagem(':sticker:' + sticker);
+                            }}
+                        />
                     </Box>
                 </Box>
             </Box>
@@ -155,7 +221,7 @@ function MessageList(props) {
         <Box
             tag="ul"
             styleSheet={{
-                overflow: 'scroll',
+                overflowX: 'hidden',
                 display: 'flex',
                 flexDirection: 'column-reverse',
                 flex: 1,
@@ -194,7 +260,7 @@ function MessageList(props) {
                                         display: 'inline-block',
                                         marginRight: '8px',
                                     }}
-                                    src={`https://github.com/GalegoSonolento.png`}
+                                    src={`https://github.com/${mensagem.de}.png`}
                                 />
                                 <Text tag="strong">
                                     {mensagem.de}
@@ -227,10 +293,33 @@ function MessageList(props) {
                                 />
                             </Box>
                         </Box>
-                        {mensagem.texto}
+                        {/* Declarativo */}
+                        {/* Condicional: {mensagem.texto.startsWith(':sticker:').toString()} */}
+                        {mensagem.texto.startsWith(':sticker:') 
+                            ? (
+                                <Image src={mensagem.texto.replace(':sticker:', '')} />
+                            )
+                            : (
+                                mensagem.texto
+                            )}
+                            
+                            
+                            {/* //  ? (
+                            //     <image src={mensagem.texto.replace(':sticker:', '')} />
+                            // )
+                            // : (
+                            //     mensagem.texto
+                            // )}  */}
+                        {/* {mensagem.texto} */}
                     </Text>
                 );
             })}
         </Box>
     )
 }
+
+// Funcionalidades ainda a adicionar 
+// - Colocar um loading enquanto a mensagem ainda não foi lançada (enquanto o useEffect não passou)
+// - Mouseover -> abrir imagem, link  pro GitHub, usar a API
+// - Imagenzinha pra colocar anexo, imagem, etc
+// - Arrumar as barras de scroll da página e do pop-up de stickers

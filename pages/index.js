@@ -87,7 +87,7 @@ export default function PaginaInicial() {
                         onSubmit={function (infosDoEvento){
                             infosDoEvento.preventDefault();
                             console.log('Alguém submeteu');
-                            rotemento.push('/chat')
+                            rotemento.push(`/chat?username=${username}`)
                             //window.location.href = '/chat'
                         }}
                         styleSheet={{
@@ -95,7 +95,7 @@ export default function PaginaInicial() {
                             width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
                         }}
                     >
-                        <Titulo tag="h2">Wecome Back Agent</Titulo>
+                        <Titulo tag="h2">Welcome Back Agent</Titulo>
                         <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[300] }}>
                             {appConfig.name}
                         </Text>
@@ -195,3 +195,6 @@ export default function PaginaInicial() {
         </>
     );
 } 
+
+// Melhoramentos:
+// - Conseguir usar a API no sistema 
